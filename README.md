@@ -1,31 +1,52 @@
-# Monopoly Deal - Next.js 15
+# Custom Monopoly Deal (Card Game)
 
-Proyecto base de Monopoly Deal creado con Next.js 15, Tailwind CSS y animaciones con Framer Motion.
+Aplicación web basada en una versión personalizada de Monopoly Deal, con cartas, reglas y comportamiento propios.
+
+El proyecto utiliza un sistema visual basado en imágenes para representar cada carta, tomando como referencia un diseño base (`card.png`).
+
+---
+
+## Descripción
+
+Este proyecto busca recrear la experiencia de un juego de cartas tipo Monopoly Deal, permitiendo:
+
+- Representar cartas mediante imágenes
+- Definir reglas personalizadas
+- Construir una interfaz interactiva con animaciones
+- Escalar el juego agregando nuevas cartas
+
+A diferencia del juego original, aquí las reglas y tipos de cartas pueden modificarse libremente.
+
+---
+
+## Diferenciadores
+
+- Cartas completamente personalizadas
+- Sistema visual basado en assets (imágenes)
+- Uso de animaciones para interacción (hover, transición)
+- Flexibilidad para modificar reglas del juego
+- Base preparada para futura lógica de juego más compleja
+
+---
+
+## Tech Stack
+
+- Next.js 15
+- React
+- Tailwind CSS
+- Framer Motion
+- pnpm
+
+---
 
 ## Requisitos
 
 - Node.js 20+
-- npm
+- pnpm instalado globalmente
 
-## Scripts
+---
 
-- `npm run dev` - inicia entorno de desarrollo
-- `npm run build` - compila para producción
-- `npm run start` - ejecuta build de producción
-- `npm run lint` - valida código con ESLint
+## Instalación
 
-## Cartas
-
-Coloca tus imágenes en `public/img`.
-
-Ejemplo de ruta pública:
-
-- `public/img/carta-azul-1.png` → `/img/carta-azul-1.png`
-
-## Pantalla inicial
-
-La home en `app/page.tsx` incluye:
-
-- Resumen del objetivo y reglas principales
-- Secciones de zonas de juego
-- Efecto visual de cartas con transiciones (hover + entrada)
+```bash
+pnpm install
