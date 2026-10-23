@@ -1,6 +1,5 @@
 "use client";
 
-import { Sulphur_Point } from "next/font/google";
 import { useEffect, useState } from "react";
 import { DifficultyScreen } from "@/components/game/difficulty-screen";
 import { GameScreen } from "@/components/game/game-screen";
@@ -21,12 +20,6 @@ import {
 import type { Difficulty, GameState } from "@/types/game";
 
 type ScreenState = "menu" | "difficulty" | "setup" | "game";
-
-const sulphurPoint = Sulphur_Point({
-  weight: ["300", "400", "700"],
-  subsets: ["latin"],
-  style: ["normal"],
-});
 
 export default function Home() {
   const [screen, setScreen] = useState<ScreenState>("menu");
@@ -95,9 +88,7 @@ export default function Home() {
   }
 
   return (
-    <main
-      className={`min-h-screen font-sans ${sulphurPoint.className} bg-gradient-to-r from-sky-400 to-blue-500 text-white`}
-    >
+    <main className="min-h-screen">
       <GameScreen
         game={game}
         onPlayToBank={(cardId) =>

@@ -96,13 +96,13 @@ export function CardTemplate({ card, compact = false, selected = false }: CardTe
   // Plantilla genérica para el resto de tipos de carta (comodín, acción, renta, dinero)
   return (
     <article
-      className={`h-full w-full rounded-xl border-2 bg-white text-slate-900 shadow-md ${selected ? "border-yellow-400" : "border-slate-900/70"}`}
+      className={`h-full w-full rounded-xl border-2 bg-[#f6f1e6] text-[#1c1410] shadow-md ${selected ? "border-[var(--gold-bright)]" : "border-[#1c1410]/60"}`}
     >
-      <div className="flex items-center justify-between border-b border-slate-300 px-2 py-1">
-        <span className="rounded-full border border-slate-500 px-1.5 py-0.5 text-[10px] font-semibold">
+      <div className="flex items-center justify-between border-b border-[#1c1410]/20 px-2 py-1">
+        <span className="rounded-full border border-[#1c1410]/50 px-1.5 py-0.5 text-[10px] font-semibold">
           {card.kind === "wild" ? "WILD" : `${card.value}M`}
         </span>
-        <span className="text-[10px] font-semibold uppercase tracking-wide">{typeLabel(card)}</span>
+        <span className="text-[10px] font-semibold uppercase tracking-wide text-[#5b4636]">{typeLabel(card)}</span>
       </div>
 
       <div className="px-2 pb-2 pt-1">
@@ -112,7 +112,7 @@ export function CardTemplate({ card, compact = false, selected = false }: CardTe
         </h3>
 
         {card.kind === "wild" && (
-          <div className="mt-2 rounded-md border border-slate-300 p-1.5">
+          <div className="mt-2 rounded-md border border-[#1c1410]/20 p-1.5">
             <p className="text-[9px] font-bold uppercase">Valor por propiedades</p>
             <div className="mt-1 space-y-0.5 text-[9px]">
               {rentValues.map((rent, index) => (
@@ -121,14 +121,14 @@ export function CardTemplate({ card, compact = false, selected = false }: CardTe
                   <span className="font-bold">{rent}M</span>
                 </div>
               ))}
-              <div className="mt-0.5 border-t border-slate-300 pt-0.5 text-right text-[9px] font-bold">
+              <div className="mt-0.5 border-t border-[#1c1410]/20 pt-0.5 text-right text-[9px] font-bold">
                 Grupo completo: {rentValues[rentValues.length - 1]}M
               </div>
             </div>
           </div>
         )}
 
-        <p className={`mt-2 leading-tight text-slate-700 ${compact ? "line-clamp-4 text-[9px]" : "text-[10px]"}`}>
+        <p className={`mt-2 leading-tight text-[#5b4636] ${compact ? "line-clamp-4 text-[9px]" : "text-[10px]"}`}>
           {card.description}
         </p>
       </div>

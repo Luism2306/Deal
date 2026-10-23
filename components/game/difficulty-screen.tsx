@@ -18,8 +18,8 @@ export function DifficultyScreen({ onBack, onSelect }: DifficultyScreenProps) {
   return (
     <section className="mx-auto flex min-h-screen w-full max-w-4xl flex-col justify-center gap-6 px-6 py-10">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <p className="text-sm uppercase tracking-wide opacity-70">Configuración</p>
-        <h2 className="mt-2 text-3xl font-bold">Selecciona dificultad</h2>
+        <p className="rb-eyebrow">Configuración</p>
+        <h2 className="mt-2 text-3xl font-bold text-[var(--gold-bright)]">Selecciona dificultad</h2>
       </motion.div>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -31,19 +31,15 @@ export function DifficultyScreen({ onBack, onSelect }: DifficultyScreenProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.06 * index }}
             onClick={() => onSelect(option.id)}
-            className="rounded-2xl border border-foreground/15 p-5 text-left transition hover:bg-foreground/10"
+            className="rb-panel rounded-2xl p-5 text-left transition hover:border-[var(--gold)]"
           >
-            <p className="text-xl font-semibold">{option.title}</p>
-            <p className="mt-1 text-sm opacity-80">{option.description}</p>
+            <p className="text-xl font-semibold text-[var(--cream)]">{option.title}</p>
+            <p className="mt-1 text-sm text-[var(--cream-muted)]">{option.description}</p>
           </motion.button>
         ))}
       </div>
 
-      <button
-        type="button"
-        onClick={onBack}
-        className="w-fit rounded-lg border border-foreground/15 px-4 py-2 text-sm hover:bg-foreground/10"
-      >
+      <button type="button" onClick={onBack} className="rb-btn-secondary w-fit px-4 py-2 text-sm">
         Volver
       </button>
     </section>

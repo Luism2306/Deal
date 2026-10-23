@@ -1,14 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CardTemplate } from "@/components/cards/card-template";
 import { HistoryPanel } from "@/components/game/history-panel";
-import { getPlayerMoneyTotal } from "@/lib/game/engine";
-import type { Card, GameState, PlacedProperty } from "@/types/game";
+import type { GameState } from "@/types/game";
 import { OpponentsRing } from "@/components/game/opponents-ring";
 import { PlayerPropertiesBoard } from "@/components/game/player-properties-board";
 import { DebtModal } from "@/components/game/debt-modal";
 import { formatCard } from "@/components/game/card-format";
+import { TableScene } from "@/components/game/three/table-scene";
 
 interface GameScreenProps {
   game: GameState;
@@ -45,6 +44,7 @@ export function GameScreen({
   const [selectedDebtBankIds, setSelectedDebtBankIds] = useState<string[]>([]);
   const [selectedDebtPropertyIds, setSelectedDebtPropertyIds] = useState<string[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [exitingCardId, setExitingCardId] = useState<string | null>(null);
 
   const currentPlayer = game.players[game.currentPlayerIndex];
   const humanPlayer = game.players.find((player) => !player.isBot) ?? currentPlayer;
@@ -90,230 +90,225 @@ export function GameScreen({
 
   const showCardActionModal = Boolean(selectedCard && isHumanTurn);
 
+  function playWithExitAnimation(cardId: string, action: () => void) {
+    setExitingCardId(cardId);
+    setSelectedCardId(null);
+    setSelectedTargetId(undefined);
+    setSelectedTargetPropertyId(undefined);
+    setSelectedMyPropertyId(undefined);
+    window.setTimeout(() => {
+      action();
+      setExitingCardId(null);
+    }, 380);
+  }
+
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_50%_30%,#34d399_0%,#10b981_40%,#065f46_100%)] text-slate-100">
+    <main className="relative min-h-screen overflow-hidden bg-[#07100e] text-[var(--cream)]">
       <HistoryPanel entries={game.log} open={historyOpen} onToggle={() => setHistoryOpen((prev) => !prev)} />
 
-      <section className="absolute inset-0 p-4 md:p-6">
-        <div className="relative h-full w-full overflow-hidden rounded-3xl border border-white/20 bg-black/15 shadow-2xl backdrop-blur-[2px]">
-          <header className="absolute left-4 right-4 top-4 z-20 flex items-center justify-between gap-4 rounded-xl border border-white/20 bg-black/35 px-4 py-2 text-sm md:left-6 md:right-6 md:top-6">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-white/70">Monopoly Deal</p>
-              <p className="text-base font-bold">Turno {game.turnNumber}: {currentPlayer.name}</p>
-              <p className="text-xs text-white/80">Movimientos: {game.movesRemaining}/3</p>
-            </div>
+      <section className="absolute inset-0">
+        <div className="absolute inset-0 z-0">
+          <TableScene
+            humanHand={humanPlayer.hand}
+            selectedCardId={selectedCardId}
+            isHumanTurn={isHumanTurn}
+            exitingCardId={exitingCardId}
+            onSelectCard={setSelectedCardId}
+            otherPlayers={otherPlayers}
+            activePlayerId={currentPlayer.id}
+            humanPlayerId={humanPlayer.id}
+            drawPileCount={game.drawPile.length}
+          />
+        </div>
+
+        <header className="absolute left-4 right-4 top-4 z-20 flex items-center justify-between gap-4 md:left-6 md:right-6 md:top-6">
+          <div className="rb-panel rounded-xl px-4 py-2">
+            <p className="rb-eyebrow">Ronda</p>
+            <p className="text-base font-bold text-[var(--cream)]">
+              Turno {game.turnNumber}: {currentPlayer.name}
+            </p>
+            <p className="text-xs text-[var(--cream-muted)]">Movimientos: {game.movesRemaining}/3</p>
+          </div>
+          <button type="button" onClick={onReset} className="rb-btn-secondary px-3 py-2 text-xs">
+            Menú
+          </button>
+        </header>
+
+        <div className="rb-panel absolute left-1/2 top-24 z-10 -translate-x-1/2 rounded-full px-4 py-2 text-xs md:top-6">
+          Reparto: {game.drawPile.length} · Juego: {game.discardPile.length}
+        </div>
+
+        <OpponentsRing
+          players={otherPlayers}
+          activePlayerId={currentPlayer.id}
+          selectedTargetId={selectedTargetId}
+          onSelectTarget={setSelectedTargetId}
+        />
+
+        <section className="rb-panel absolute left-1/2 top-[34%] z-20 w-[86%] max-w-6xl -translate-x-1/2 rounded-2xl p-4">
+          <PlayerPropertiesBoard
+            properties={humanPlayer.properties}
+            isHumanTurn={isHumanTurn}
+            onMoveWild={onMoveWild}
+          />
+        </section>
+
+        {debtForHumanPlayer && (
+          <DebtModal
+            amount={debtForHumanPlayer.amount}
+            reason={debtForHumanPlayer.reason}
+            bankCards={humanPlayer.bank}
+            propertyCards={humanPlayer.properties}
+            selectedBankIds={selectedDebtBankIds}
+            selectedPropertyIds={selectedDebtPropertyIds}
+            selectedTotal={selectedDebtAmount}
+            onToggleBankId={(id) =>
+              setSelectedDebtBankIds((prev) =>
+                prev.includes(id) ? prev.filter((existing) => existing !== id) : [...prev, id],
+              )
+            }
+            onTogglePropertyId={(id) =>
+              setSelectedDebtPropertyIds((prev) =>
+                prev.includes(id) ? prev.filter((existing) => existing !== id) : [...prev, id],
+              )
+            }
+            onConfirm={() => {
+              onPayDebt(selectedDebtBankIds, selectedDebtPropertyIds);
+              setSelectedDebtBankIds([]);
+              setSelectedDebtPropertyIds([]);
+            }}
+            onAutoPay={onAutoPayDebt}
+          />
+        )}
+
+        <section className="pointer-events-none absolute bottom-4 left-1/2 z-30 flex w-full max-w-5xl -translate-x-1/2 items-end justify-end px-4">
+          <aside className="rb-panel pointer-events-auto flex flex-col gap-2 rounded-xl px-3 py-2 text-xs">
+            <p className="rb-eyebrow">Turno</p>
             <button
               type="button"
-              onClick={onReset}
-              className="rounded-lg border border-white/30 bg-white/10 px-3 py-1.5 text-xs uppercase tracking-wide text-white hover:bg-white/20"
-            >
-              Menú
-            </button>
-          </header>
-
-          <div className="absolute left-1/2 top-6 z-10 -translate-x-1/2 rounded-full border border-white/25 bg-black/30 px-4 py-2 text-xs shadow-xl">
-            Reparto: {game.drawPile.length} · Juego: {game.discardPile.length}
-          </div>
-
-          <OpponentsRing
-            players={otherPlayers}
-            selectedTargetId={selectedTargetId}
-            onSelectTarget={setSelectedTargetId}
-          />
-
-          <section className="absolute left-1/2 top-[32%] z-20 w-[86%] max-w-6xl -translate-x-1/2 rounded-2xl border border-white/25 bg-black/30 p-4 shadow-xl">
-            <PlayerPropertiesBoard
-              properties={humanPlayer.properties}
-              isHumanTurn={isHumanTurn}
-              onMoveWild={onMoveWild}
-            />
-          </section>
-
-          {debtForHumanPlayer && (
-            <DebtModal
-              amount={debtForHumanPlayer.amount}
-              reason={debtForHumanPlayer.reason}
-              bankCards={humanPlayer.bank}
-              propertyCards={humanPlayer.properties}
-              selectedBankIds={selectedDebtBankIds}
-              selectedPropertyIds={selectedDebtPropertyIds}
-              selectedTotal={selectedDebtAmount}
-              onToggleBankId={(id) =>
-                setSelectedDebtBankIds((prev) =>
-                  prev.includes(id) ? prev.filter((existing) => existing !== id) : [...prev, id],
-                )
-              }
-              onTogglePropertyId={(id) =>
-                setSelectedDebtPropertyIds((prev) =>
-                  prev.includes(id) ? prev.filter((existing) => existing !== id) : [...prev, id],
-                )
-              }
-              onConfirm={() => {
-                onPayDebt(selectedDebtBankIds, selectedDebtPropertyIds);
-                setSelectedDebtBankIds([]);
-                setSelectedDebtPropertyIds([]);
+              disabled={!isHumanTurn}
+              onClick={() => {
+                if (!isHumanTurn) return;
+                if (game.movesRemaining > 0) {
+                  onPassTurn();
+                } else {
+                  onEndTurn();
+                }
               }}
-              onAutoPay={onAutoPayDebt}
-            />
-          )}
+              className="rb-btn-primary px-3 py-2 text-xs"
+            >
+              {game.movesRemaining > 0 ? "Pasar y terminar" : "Siguiente turno"}
+            </button>
+          </aside>
+        </section>
 
-          <section className="absolute bottom-0 left-1/2 z-30 w-full max-w-5xl -translate-x-1/2">
-            <div className="group relative mx-auto w-full max-w-5xl">
-              <div
-                className="pointer-events-auto translate-y-54 rounded-t-2xl border border-white/30 bg-black/40 p-3 pb-4 shadow-2xl transition-transform duration-300 ease-out group-hover:translate-y-0"
+        {showCardActionModal && (
+          <section className="rb-modal absolute bottom-24 left-1/2 z-40 w-[92%] max-w-xl -translate-x-1/2 rounded-2xl p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="rb-eyebrow">Acciones de carta</p>
+                <p className="text-sm font-semibold text-[var(--cream)]">
+                  {selectedCard ? formatCard(selectedCard) : ""}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedCardId(null)}
+                className="rb-btn-secondary px-2 py-1 text-xs"
               >
-                <div className="grid gap-3 lg:grid-cols-[1fr_auto]">
-                  <div>
-                    <div
-                      className={`flex items-end justify-center gap-1 overflow-x-auto pb-2 pt-5 transition-all ${
-                        isHumanTurn ? "opacity-100" : "opacity-40 blur-[1px] translate-y-2"
-                      }`}
-                    >
-                      {humanPlayer.hand.map((card, index) => {
-                        const offset = index - (humanPlayer.hand.length - 1) / 2;
-                        const rotate = offset * 4;
-                        const translateY = Math.abs(offset) * 4;
-
-                        return (
-                          <button
-                            key={card.id}
-                            type="button"
-                            onClick={() => setSelectedCardId(card.id)}
-                            disabled={!isHumanTurn}
-                            className="h-52 w-34 shrink-0 rounded-xl border bg-white p-2 text-left shadow-md transition hover:-translate-y-4 disabled:opacity-45"
-                            style={{
-                              transform: `rotate(${rotate}deg) translateY(${translateY}px)`,
-                            }}
-                            title={card.description}
-                          >
-                            <CardTemplate card={card} compact selected={selectedCardId === card.id} />
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <aside className="flex flex-col justify-center gap-2 rounded-xl border border-white/20 bg-black/45 px-3 py-2 text-xs">
-                    <p className="font-semibold uppercase text-white/80">Turno</p>
-                    <button
-                      type="button"
-                      disabled={!isHumanTurn}
-                      onClick={() => {
-                        if (!isHumanTurn) return;
-                        if (game.movesRemaining > 0) {
-                          onPassTurn();
-                        } else {
-                          onEndTurn();
-                        }
-                      }}
-                      className="rounded-lg border border-white/25 bg-emerald-500/80 px-3 py-2 text-xs font-semibold text-white disabled:opacity-40"
-                    >
-                      {game.movesRemaining > 0 ? "Pasar y terminar" : "Siguiente turno"}
-                    </button>
-                  </aside>
-                </div>
-              </div>
+                Cerrar
+              </button>
             </div>
-          </section>
 
-          {showCardActionModal && (
-            <section className="absolute bottom-52 left-1/2 z-40 w-[92%] max-w-xl -translate-x-1/2 rounded-2xl border border-white/30 bg-black/70 p-4 shadow-2xl backdrop-blur">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs uppercase text-white/70">Acciones de carta</p>
-                  <p className="text-sm font-semibold">{selectedCard ? formatCard(selectedCard) : ""}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setSelectedCardId(null)}
-                  className="rounded border border-white/30 px-2 py-1 text-xs"
-                >
-                  Cerrar
-                </button>
-              </div>
-
-              <div className="mt-3 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  disabled={!selectedCard || !!debtForHumanPlayer}
-                  onClick={() => selectedCard && onPlayToBank(selectedCard.id)}
-                  className="rounded-lg border border-white/25 bg-white/10 px-3 py-2 text-xs disabled:opacity-40"
-                >
-                  Jugar en banco
-                </button>
-                <button
-                  type="button"
-                  disabled={!selectedCard || !!debtForHumanPlayer}
-                  onClick={() =>
-                    selectedCard && onPlayToProperties(selectedCard.id, selectedCard.colors?.[0])
-                  }
-                  className="rounded-lg border border-white/25 bg-white/10 px-3 py-2 text-xs disabled:opacity-40"
-                >
-                  Jugar en propiedad
-                </button>
-                <button
-                  type="button"
-                  disabled={!selectedCard || !!debtForHumanPlayer || !canPlaySelectedAction}
-                  onClick={() =>
-                    selectedCard &&
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={!selectedCard || !!debtForHumanPlayer || !!exitingCardId}
+                onClick={() =>
+                  selectedCard &&
+                  playWithExitAnimation(selectedCard.id, () => onPlayToBank(selectedCard.id))
+                }
+                className="rb-btn-secondary px-3 py-2 text-xs"
+              >
+                Jugar en banco
+              </button>
+              <button
+                type="button"
+                disabled={!selectedCard || !!debtForHumanPlayer || !!exitingCardId}
+                onClick={() =>
+                  selectedCard &&
+                  playWithExitAnimation(selectedCard.id, () =>
+                    onPlayToProperties(selectedCard.id, selectedCard.colors?.[0]),
+                  )
+                }
+                className="rb-btn-secondary px-3 py-2 text-xs"
+              >
+                Jugar en propiedad
+              </button>
+              <button
+                type="button"
+                disabled={!selectedCard || !!debtForHumanPlayer || !canPlaySelectedAction || !!exitingCardId}
+                onClick={() =>
+                  selectedCard &&
+                  playWithExitAnimation(selectedCard.id, () =>
                     onPlayAction(selectedCard.id, {
                       targetPlayerId: selectedTargetId,
                       targetPropertyId: selectedTargetPropertyId,
                       myPropertyId: selectedMyPropertyId,
-                    })
-                  }
-                  className="rounded-lg border border-white/25 bg-white/10 px-3 py-2 text-xs disabled:opacity-40"
-                >
-                  Ejecutar acción
-                </button>
+                    }),
+                  )
+                }
+                className="rb-btn-primary px-3 py-2 text-xs"
+              >
+                Ejecutar acción
+              </button>
+            </div>
+
+            {(isTratoAstuto || isIntercambio) && (
+              <div className="rb-panel mt-3 rounded-lg p-2 text-xs">
+                <p className="font-semibold text-[var(--cream)]">Selección de objetivo</p>
+                {!selectedTargetPlayer && (
+                  <p className="mt-1 text-[var(--cream-muted)]">Selecciona un bot en mesa (izquierda/arriba/derecha).</p>
+                )}
+                {selectedTargetPlayer && (
+                  <>
+                    <label className="mt-2 block text-[var(--cream-muted)]">Carta del oponente</label>
+                    <select
+                      value={selectedTargetPropertyId ?? ""}
+                      onChange={(event) => setSelectedTargetPropertyId(event.target.value || undefined)}
+                      className="mt-1 w-full rounded-md border border-[var(--panel-border)] bg-[#0d1b18] px-2 py-1 text-[var(--cream)]"
+                    >
+                      <option value="">Seleccionar propiedad</option>
+                      {selectedTargetPlayer.properties.map((property) => (
+                        <option key={property.id} value={property.id}>
+                          {formatCard(property)}
+                        </option>
+                      ))}
+                    </select>
+                  </>
+                )}
+
+                {isIntercambio && (
+                  <>
+                    <label className="mt-2 block text-[var(--cream-muted)]">Tu carta para intercambio</label>
+                    <select
+                      value={selectedMyPropertyId ?? ""}
+                      onChange={(event) => setSelectedMyPropertyId(event.target.value || undefined)}
+                      className="mt-1 w-full rounded-md border border-[var(--panel-border)] bg-[#0d1b18] px-2 py-1 text-[var(--cream)]"
+                    >
+                      <option value="">Seleccionar tu propiedad</option>
+                      {humanPlayer.properties.map((property) => (
+                        <option key={property.id} value={property.id}>
+                          {formatCard(property)}
+                        </option>
+                      ))}
+                    </select>
+                  </>
+                )}
               </div>
-
-              {(isTratoAstuto || isIntercambio) && (
-                <div className="mt-3 rounded-lg border border-white/20 bg-black/35 p-2 text-xs">
-                  <p className="font-semibold text-white/90">Selección de objetivo</p>
-                  {!selectedTargetPlayer && (
-                    <p className="mt-1 text-white/70">Selecciona un bot en mesa (izquierda/arriba/derecha).</p>
-                  )}
-                  {selectedTargetPlayer && (
-                    <>
-                      <label className="mt-2 block text-white/80">Carta del oponente</label>
-                      <select
-                        value={selectedTargetPropertyId ?? ""}
-                        onChange={(event) => setSelectedTargetPropertyId(event.target.value || undefined)}
-                        className="mt-1 w-full rounded-md border border-white/30 bg-black/40 px-2 py-1"
-                      >
-                        <option value="">Seleccionar propiedad</option>
-                        {selectedTargetPlayer.properties.map((property) => (
-                          <option key={property.id} value={property.id}>
-                            {formatCard(property)}
-                          </option>
-                        ))}
-                      </select>
-                    </>
-                  )}
-
-                  {isIntercambio && (
-                    <>
-                      <label className="mt-2 block text-white/80">Tu carta para intercambio</label>
-                      <select
-                        value={selectedMyPropertyId ?? ""}
-                        onChange={(event) => setSelectedMyPropertyId(event.target.value || undefined)}
-                        className="mt-1 w-full rounded-md border border-white/30 bg-black/40 px-2 py-1"
-                      >
-                        <option value="">Seleccionar tu propiedad</option>
-                        {humanPlayer.properties.map((property) => (
-                          <option key={property.id} value={property.id}>
-                            {formatCard(property)}
-                          </option>
-                        ))}
-                      </select>
-                    </>
-                  )}
-                </div>
-              )}
-            </section>
-          )}
-        </div>
+            )}
+          </section>
+        )}
       </section>
     </main>
   );

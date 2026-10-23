@@ -68,8 +68,8 @@ export function PropertyCard({ card, selected = false }: PropertyCardProps) {
 
   return (
     <article
-      className={`h-full w-full border-2 bg-white text-slate-900 shadow-md ${
-        selected ? "border-yellow-400" : "border-slate-900/70"
+      className={`h-full w-full border-2 bg-[#f6f1e6] text-[#1c1410] shadow-md ${
+        selected ? "border-[var(--gold-bright)]" : "border-[#1c1410]/60"
       }`}
     >
       {/* Banda superior de color con el nombre de la propiedad */}
@@ -82,7 +82,7 @@ export function PropertyCard({ card, selected = false }: PropertyCardProps) {
         </h3>
       </div>
       {/* Círculo con el valor de la carta */}
-      <div className="absolute -bottom-3 left-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-slate-900 bg-white text-[11px] font-black text-slate-900">
+      <div className="absolute -bottom-3 left-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-[#1c1410] bg-[#f6f1e6] text-[11px] font-black text-[#1c1410]">
         {card.value}M
       </div>
 
@@ -103,8 +103,8 @@ export function PropertyCard({ card, selected = false }: PropertyCardProps) {
             >
               <div className="flex items-center gap-1">
                 {/* Icono sencillo de "cantidad de cartas" */}
-                <div className="flex h-4 w-5 items-center justify-center rounded-lg border border-slate-900 bg-white">
-                  <span className="text-[8px] font-bold text-pink-600">
+                <div className="flex h-4 w-5 items-center justify-center rounded-lg border border-[#1c1410] bg-[#f6f1e6]">
+                  <span className="text-[8px] font-bold text-[#92661b]">
                     {index + 1}
                   </span>
                 </div>
@@ -115,7 +115,7 @@ export function PropertyCard({ card, selected = false }: PropertyCardProps) {
         </div>
 
         {/* Descripción opcional en la parte inferior */}
-       
+
       </div>
     </article>
   );

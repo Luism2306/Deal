@@ -29,13 +29,14 @@ export function DebtModal({
   onAutoPay,
 }: DebtModalProps) {
   return (
-    <section className="absolute inset-0 z-40 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-3xl rounded-2xl border border-rose-300 bg-rose-50 p-4 text-slate-900">
-        <h2 className="text-lg font-bold">Debes pagar {amount}M</h2>
-        <p className="text-sm">Razón: {reason}</p>
+    <section className="absolute inset-0 z-40 flex items-center justify-center bg-black/60 p-4">
+      <div className="rb-modal w-full max-w-3xl rounded-2xl p-4 text-[var(--cream)]">
+        <p className="rb-eyebrow">Deuda pendiente</p>
+        <h2 className="text-lg font-bold text-[var(--gold-bright)]">Debes pagar {amount}M</h2>
+        <p className="text-sm text-[var(--cream-muted)]">Razón: {reason}</p>
 
         <div className="mt-3 grid gap-3 md:grid-cols-2">
-          <div className="rounded-lg border border-slate-300 bg-white p-3">
+          <div className="rounded-lg border border-[var(--panel-border)] bg-black/20 p-3">
             <p className="text-sm font-semibold">Banco</p>
             <div className="mt-2 space-y-1">
               {bankCards.map((card) => (
@@ -51,7 +52,7 @@ export function DebtModal({
             </div>
           </div>
 
-          <div className="rounded-lg border border-slate-300 bg-white p-3">
+          <div className="rounded-lg border border-[var(--panel-border)] bg-black/20 p-3">
             <p className="text-sm font-semibold">Propiedades</p>
             <div className="mt-2 space-y-1">
               {propertyCards.map((card) => (
@@ -70,18 +71,10 @@ export function DebtModal({
 
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <p className="text-sm font-semibold">Seleccionado: {selectedTotal}M</p>
-          <button
-            type="button"
-            onClick={onConfirm}
-            className="rounded-lg border border-slate-400 bg-white px-3 py-2 text-sm"
-          >
+          <button type="button" onClick={onConfirm} className="rb-btn-primary px-3 py-2 text-sm">
             Confirmar pago
           </button>
-          <button
-            type="button"
-            onClick={onAutoPay}
-            className="rounded-lg border border-slate-400 bg-white px-3 py-2 text-sm"
-          >
+          <button type="button" onClick={onAutoPay} className="rb-btn-secondary px-3 py-2 text-sm">
             Auto pagar
           </button>
         </div>
